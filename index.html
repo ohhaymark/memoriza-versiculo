@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memoriza Versículo</title>
+<style>
+:root {
+  --bg: #0a0a16;
+  --surface: #121220;
+  --surface2: #1a1a2e;
+  --border: rgba(180,160,100,0.15);
+  --border2: rgba(180,160,100,0.3);
+  --gold: #c9a84c;
+  --gold2: #e8c96a;
+  --gold3: #f5e4a8;
+  --text: #ede8d8;
+  --muted: #7a7565;
+  --muted2: #a09880;
+  --green: #4caf82;
+  --red: #d95555;
+  --yellow: #c4943c;
+  --r: 14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Georgia',serif;min-height:100vh;padding-bottom:90px}
+
+/* HEADER */
+.hdr{text-align:center;padding:36px 20px 20px;position:relative}
+.hdr-ornament{color:var(--gold);font-size:0.7rem;letter-spacing:6px;opacity:0.6;margin-bottom:8px}
+.hdr h1{font-size:1.7rem;letter-spacing:3px;background:linear-gradient(135deg,var(--gold),var(--gold3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hdr p{color:var(--muted2);font-size:0.78rem;margin-top:6px;letter-spacing:1px}
+.hdr-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:16px auto 0}
+
+/* NAV */
+nav{display:flex;justify-content:center;gap:4px;padding:0 12px 16px;flex-wrap:wrap}
+nav button{background:transparent;border:1px solid var(--border);color:var(--muted2);padding:8px 16px;border-radius:99px;cursor:pointer;font-size:0.75rem;transition:all 0.25s;font-family:inherit;letter-spacing:0.5px;display:flex;align-items:center;gap:6px}
+nav button svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+nav button.active,nav button:hover{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.08)}
+
+/* SCREENS */
+.screen{display:none;padding:16px 16px 0;max-width:580px;margin:0 auto}
+.screen.active{display:block}
+.sec-title{font-size:0.7rem;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.card+.card{margin-top:10px}
+
+/* STUDY MODE BAR */
+.mode-bar{display:flex;gap:6px;justify-content:center;margin-bottom:18px;flex-wrap:wrap}
+.mode-bar button{background:var(--surface);border:1px solid var(--border);color:var(--muted2);padding:6px 16px;border-radius:99px;cursor:pointer;font-size:0.74rem;transition:all 0.2s;font-family:inherit;letter-spacing:0.5px}
+.mode-bar button.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.1)}
+
+/* FLASHCARD */
+.card-area{perspective:1000px;margin:0 auto 14px;max-width:500px}
+.card-inner{position:relative;width:100%;min-height:230px;transform-style:preserve-3d;transition:transform 0.5s;cursor:pointer}
+.card-inner.flipped{transform:rotateY(180deg)}
+.card-front,.card-back{position:absolute;width:100%;min-height:230px;backface-visibility:hidden;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:30px 24px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.card-back{transform:rotateY(180deg)}
+.card-chip{font-size:0.62rem;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;background:rgba(201,168,76,0.08);padding:4px 14px;border-radius:99px;border:1px solid var(--border)}
+.card-text{font-size:1rem;line-height:1.8;color:var(--text)}
+.card-ref{font-size:1rem;color:var(--gold2);font-style:italic;margin-top:14px}
+.card-ref-big{font-size:1.5rem;color:var(--gold2);font-style:italic}
+.card-hint{font-size:0.72rem;color:var(--muted);margin-top:16px}
+.card-counter{text-align:center;color:var(--muted);font-size:0.75rem;margin-bottom:10px;letter-spacing:1px}
+.btn-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn-row button{padding:9px 22px;border-radius:99px;border:none;cursor:pointer;font-size:0.8rem;font-family:inherit;transition:opacity 0.2s;letter-spacing:0.5px}
+.btn-f{background:var(--red);color:#fff}.btn-a{background:var(--yellow);color:#fff}.btn-k{background:var(--green);color:#fff}
+.btn-row button:hover{opacity:0.82}
+
+/* GAPS */
+.gap-text{font-size:0.97rem;line-height:2;color:var(--text);text-align:center}
+.gap{display:inline-block;background:rgba(201,168,76,0.1);border:1px solid var(--border);border-radius:6px;min-width:65px;height:1.15em;vertical-align:middle;cursor:pointer;color:transparent;transition:all 0.3s}
+.gap.revealed{background:rgba(201,168,76,0.12);border-color:var(--gold);color:var(--gold2)}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;text-align:center}
+.stat-num{font-size:2rem;margin-bottom:4px}
+.stat-lbl{font-size:0.7rem;color:var(--muted2);letter-spacing:1px;text-transform:uppercase}
+.prog-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:8px}
+.pi-ref{color:var(--gold);font-size:0.83rem;display:flex;align-items:center;justify-content:space-between}
+.pi-text{color:var(--muted2);font-size:0.77rem;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pi-bar{margin-top:10px;height:3px;background:var(--border);border-radius:99px;overflow:hidden}
+.pi-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--gold3));transition:width 0.4s}
+.badge{font-size:0.65rem;padding:3px 10px;border-radius:99px;letter-spacing:0.5px}
+.b-new{background:rgba(120,115,100,0.2);color:var(--muted2)}
+.b-learn{background:rgba(196,148,60,0.15);color:var(--yellow)}
+.b-done{background:rgba(76,175,130,0.15);color:var(--green)}
+
+/* FORM */
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.form-group label{font-size:0.68rem;color:var(--gold);letter-spacing:2px;text-transform:uppercase}
+.form-group input,.form-group textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-size:0.9rem;font-family:inherit;outline:none;transition:border-color 0.2s;resize:vertical}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--gold)}
+.form-group textarea{min-height:88px}
+.ai-row{display:flex;gap:8px}
+.ai-row input{flex:1}
+.status-msg{font-size:0.75rem;min-height:16px;margin-top:-8px}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0a16;border:none;border-radius:99px;padding:11px 28px;font-size:0.88rem;font-family:inherit;cursor:pointer;font-weight:bold;transition:opacity 0.2s;letter-spacing:0.5px}
+.btn-gold:hover{opacity:0.86}.btn-gold:disabled{opacity:0.45;cursor:not-allowed}
+.verse-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 15px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+.vi-ref{color:var(--gold);font-size:0.82rem}.vi-prev{color:var(--muted2);font-size:0.77rem;margin-top:3px}
+.btn-del{background:transparent;border:1px solid var(--border);color:var(--red);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:0.74rem;white-space:nowrap;transition:all 0.2s}
+.btn-del:hover{background:rgba(217,85,85,0.1)}
+.empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:0.85rem;line-height:1.7}
+
+/* TÉCNICAS */
+.tec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;transition:border-color 0.2s}
+.tec-card:hover{border-color:var(--border2)}
+.tec-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;cursor:pointer;user-select:none}
+.tec-left{display:flex;align-items:center;gap:12px}
+.tec-ico{width:36px;height:36px;border-radius:10px;background:rgba(201,168,76,0.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.tec-ttl{color:var(--gold2);font-size:0.92rem}.tec-sub{color:var(--muted2);font-size:0.7rem;margin-top:2px;letter-spacing:0.5px}
+.tec-arr{color:var(--muted);transition:transform 0.3s;font-size:0.8rem}
+.tec-card.open .tec-arr{transform:rotate(180deg)}
+.tec-body{display:none;padding:0 18px 18px;border-top:1px solid var(--border)}
+.tec-card.open .tec-body{display:block}
+.tec-body p{color:var(--text);font-size:0.85rem;line-height:1.75;margin-top:14px}
+.tec-body ul{padding-left:18px;margin-top:8px}
+.tec-body li{color:var(--muted2);font-size:0.82rem;line-height:1.75;margin-bottom:3px}
+.tec-body strong{color:var(--gold)}
+.tec-ex{background:rgba(201,168,76,0.06);border-left:2px solid var(--gold);border-radius:0 8px 8px 0;padding:10px 14px;margin-top:12px;font-size:0.82rem;color:var(--muted2);line-height:1.65;font-style:italic}
+
+/* AI CHAT */
+.ai-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-top:14px}
+.ai-box-title{font-size:0.68rem;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.chat-row{display:flex;gap:8px}
+.chat-row input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 13px;font-size:0.85rem;font-family:inherit;outline:none;transition:border-color 0.2s}
+.chat-row input:focus{border-color:var(--gold)}
+.chat-row button{background:rgba(201,168,76,0.15);border:1px solid var(--border2);color:var(--gold);border-radius:10px;padding:10px 15px;cursor:pointer;font-size:0.85rem;font-family:inherit;transition:all 0.2s;white-space:nowrap}
+.chat-row button:hover{background:rgba(201,168,76,0.22)}.chat-row button:disabled{opacity:0.45;cursor:not-allowed}
+#chat-resp{margin-top:14px;font-size:0.84rem;line-height:1.8;color:var(--text);white-space:pre-wrap}
+#chat-resp.loading{color:var(--muted2);font-style:italic}
+
+/* GUIDE */
+.guide-hero{text-align:center;padding:22px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px}
+.guide-hero p{color:var(--muted2);font-size:0.84rem;line-height:1.7;margin-top:8px}
+.guide-tab{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.guide-tab-hdr{display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;user-select:none}
+.guide-tab-hdr:hover .guide-tab-title{color:var(--gold2)}
+.guide-tab-num{width:28px;height:28px;border-radius:50%;background:rgba(201,168,76,0.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:var(--gold);flex-shrink:0;font-style:normal}
+.guide-tab-title{color:var(--text);font-size:0.9rem;flex:1;transition:color 0.2s}
+.guide-tab-arr{color:var(--muted);font-size:0.78rem;transition:transform 0.3s}
+.guide-tab.open .guide-tab-arr{transform:rotate(180deg)}
+.guide-tab-body{display:none;padding:0 18px 18px;border-top:1px solid var(--border)}
+.guide-tab.open .guide-tab-body{display:block}
+.guide-step{display:flex;gap:10px;margin-top:14px;align-items:flex-start}
+.guide-step-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:7px;flex-shrink:0}
+.guide-step p{color:var(--muted2);font-size:0.83rem;line-height:1.7}
+.guide-step p strong{color:var(--text)}
+.guide-tip{background:rgba(201,168,76,0.06);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-top:14px;font-size:0.8rem;color:var(--gold2);line-height:1.65}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--gold);color:var(--gold2);padding:9px 22px;border-radius:99px;font-size:0.8rem;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:99;letter-spacing:0.5px}
+.toast.show{opacity:1}
+
+/* TABLET */
+@media(min-width:600px){
+  .screen{padding:20px 24px 0}
+  .card-area{max-width:520px}
+  .stats-grid{gap:14px}
+  .stat-num{font-size:2.4rem}
+  nav{gap:6px;padding:0 16px 18px}
+  nav button{padding:9px 18px;font-size:0.8rem}
+}
+/* MOBILE GRANDE (≤480px) */
+@media(max-width:480px){
+  nav{gap:4px;padding:0 8px 12px}
+  nav button{padding:7px 10px;font-size:0.68rem;gap:4px}
+  nav button svg{width:13px;height:13px}
+  .hdr h1{font-size:1.25rem;letter-spacing:2px}
+  .hdr{padding:24px 16px 14px}
+  .screen{padding:12px 12px 0}
+  .card-front,.card-back{padding:22px 16px}
+  .card-text{font-size:0.93rem}
+  .card-ref-big{font-size:1.2rem}
+  .btn-row button{padding:8px 16px;font-size:0.76rem}
+  .stats-grid{gap:8px}
+  .stat-num{font-size:1.6rem}
+  .stat-lbl{font-size:0.65rem}
+  .tec-hdr{padding:13px 14px}
+  .tec-ico{width:32px;height:32px;font-size:0.9rem}
+  .tec-ttl{font-size:0.86rem}
+  .guide-tab-hdr{padding:12px 14px}
+  .guide-tab-title{font-size:0.83rem}
+  .ai-box{padding:14px}
+  .card{padding:16px}
+}
+/* MOBILE PEQUENO (≤360px) */
+@media(max-width:360px){
+  nav button span{display:none}
+  nav button{padding:8px 10px}
+  .hdr h1{font-size:1.1rem}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-ornament">✦ ✦ ✦</div>
+  <h1>MEMORIZA VERSÍCULO</h1>
+  <p>Grave a Palavra no coração</p>
+  <div class="hdr-line"></div>
+</div>
+
+<nav>
+  <button class="active" onclick="show('guia')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    Como usar
+  </button>
+  <button onclick="show('study')">
+    <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    Estudar
+  </button>
+  <button onclick="show('tecnicas')">
+    <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+    Técnicas
+  </button>
+  <button onclick="show('progress')">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Progresso
+  </button>
+  <button onclick="show('add')">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Versículos
+  </button>
+</nav>
+
+<!-- ESTUDAR -->
+<div id="study" class="screen">
+  <div class="mode-bar">
+    <button class="active" onclick="setMode('flip')">Flashcard</button>
+    <button onclick="setMode('gaps')">Lacunas</button>
+    <button onclick="setMode('ref')">Só referência</button>
+  </div>
+  <div id="study-content"></div>
+</div>
+
+<!-- TÉCNICAS -->
+<div id="tecnicas" class="screen">
+  <div class="sec-title">Métodos de memorização</div>
+
+  <div class="tec-card" onclick="togTec(this)">
+    <div class="tec-hdr">
+      <div class="tec-left"><div class="tec-ico">🔁</div><div><div class="tec-ttl">Repetição Espaçada</div><div class="tec-sub">Ciência da memória</div></div></div>
+      <span class="tec-arr">▼</span>
+    </div>
+    <div class="tec-body">
+      <p>O método mais eficaz comprovado pela neurociência. Em vez de repetir várias vezes seguidas, você revisa em <strong>intervalos crescentes</strong>: hoje, amanhã, em 3 dias, em 1 semana, em 1 mês.</p>
+      <ul>
+        <li>Use os botões <strong>Lembrei / Quase / Esqueci</strong> — o app já prioriza automaticamente.</li>
+        <li>Revise pelo menos 5 minutos por dia, todos os dias.</li>
+        <li>Não pule os versículos "fáceis" — eles também precisam de revisão.</li>
+      </ul>
+      <div class="tec-ex">Dica: revise seus versículos toda manhã antes de checar o celular. 5 minutos já fazem diferença.</div>
+    </div>
+  </div>
+
+  <div class="tec-card" onclick="togTec(this)">
+    <div class="tec-hdr">
+      <div class="tec-left"><div class="tec-ico">✋</div><div><div class="tec-ttl">Ancoragem Visual (Mão)</div><div class="tec-sub">Associação corporal</div></div></div>
+      <span class="tec-arr">▼</span>
+    </div>
+    <div class="tec-body">
+      <p>Associe partes do versículo a cada dedo da mão. Toque cada dedo enquanto recita cada fragmento. Repita até o gesto trazer a palavra automaticamente.</p>
+      <div class="tec-ex">Filipenses 4:13 — "Tudo posso / naquele / que me / fortalece." Polegar → Indicador → Médio → Anelar.</div>
+    </div>
+  </div>
+
+  <div class="tec-card" onclick="togTec(this)">
+    <div class="tec-hdr">
+      <div class="tec-left"><div class="tec-ico">🔤</div><div><div class="tec-ttl">Acrônimos e Iniciais</div><div class="tec-sub">Codificação verbal</div></div></div>
+      <span class="tec-arr">▼</span>
+    </div>
+    <div class="tec-body">
+      <p>Pegue a <strong>primeira letra de cada palavra-chave</strong> e forme uma sigla ou palavra conhecida. Essa "chave" acessa o texto completo.</p>
+      <ul>
+        <li>Identifique as 3–5 palavras mais importantes.</li>
+        <li>Forme uma palavra ou sigla com as iniciais.</li>
+        <li>Associe a uma imagem visual forte.</li>
+      </ul>
+      <div class="tec-ex">Grego, Hebraico, Aramaico → G-H-A → "GHÁ" → lembra "chá" → ao tomar chá, lembra das línguas bíblicas.</div>
+    </div>
+  </div>
+
+  <div class="tec-card" onclick="togTec(this)">
+    <div class="tec-hdr">
+      <div class="tec-left"><div class="tec-ico">📝</div><div><div class="tec-ttl">Leitura Ativa (SQ3R)</div><div class="tec-sub">Compreensão profunda</div></div></div>
+      <span class="tec-arr">▼</span>
+    </div>
+    <div class="tec-body">
+      <p>Interaja com o texto em vez de apenas ler. O método SQ3R força o cérebro a processar profundamente.</p>
+      <ul>
+        <li><strong>Surveie:</strong> leia rapidamente uma vez.</li>
+        <li><strong>Questione:</strong> Quem? O quê? Por quê? Para quem?</li>
+        <li><strong>Leia</strong> com atenção, palavra por palavra.</li>
+        <li><strong>Recite:</strong> explique em voz alta como se ensinasse alguém.</li>
+        <li><strong>Revise:</strong> volte horas depois e teste sua memória.</li>
+      </ul>
+      <div class="tec-ex">Recitar em voz alta ativa mais regiões do cérebro do que ler em silêncio.</div>
+    </div>
+  </div>
+
+  <div class="tec-card" onclick="togTec(this)">
+    <div class="tec-hdr">
+      <div class="tec-left"><div class="tec-ico">🧩</div><div><div class="tec-ttl">Fragmentação Progressiva</div><div class="tec-sub">Memorização por partes</div></div></div>
+      <span class="tec-arr">▼</span>
+    </div>
+    <div class="tec-body">
+      <p>Divida o versículo em pequenos fragmentos. Memorize <strong>de trás para frente</strong>, acumulando peça por peça.</p>
+      <div class="tec-ex">João 3:16 → comece por "…vida eterna." → "…não pereça, mas tenha a vida eterna." → continue acumulando até o início.</div>
+    </div>
+  </div>
+
+  <div class="tec-card" onclick="togTec(this)">
+    <div class="tec-hdr">
+      <div class="tec-left"><div class="tec-ico">📖</div><div><div class="tec-ttl">Contexto e Narrativa</div><div class="tec-sub">Ancoragem histórica</div></div></div>
+      <span class="tec-arr">▼</span>
+    </div>
+    <div class="tec-body">
+      <p>Versículos sem contexto são esquecidos mais rápido. Entender quem disse, para quem e por quê dá <strong>raiz</strong> à memória.</p>
+      <ul>
+        <li>Leia o capítulo inteiro antes de focar no versículo.</li>
+        <li>Pesquise o contexto histórico e o autor.</li>
+        <li>Crie uma história mental ligando o versículo à sua vida.</li>
+      </ul>
+      <div class="tec-ex">Filipenses 4:13 foi escrito por Paulo na prisão — ele falava de contentamento, não de conquistas pessoais. Esse contexto transforma e fixa o versículo.</div>
+    </div>
+  </div>
+
+  <div class="tec-card" onclick="togTec(this)">
+    <div class="tec-hdr">
+      <div class="tec-left"><div class="tec-ico">🎵</div><div><div class="tec-ttl">Canto e Melodia</div><div class="tec-sub">Memória musical</div></div></div>
+      <span class="tec-arr">▼</span>
+    </div>
+    <div class="tec-body">
+      <p>O cérebro retém melodias com muito mais facilidade que texto. Associe o versículo a uma melodia simples — mesmo inventada.</p>
+      <ul>
+        <li>Use uma melodia conhecida e adapte o versículo a ela.</li>
+        <li>Invente um ritmo simples enquanto recita.</li>
+        <li>Repita cantando até sair automático.</li>
+      </ul>
+      <div class="tec-ex">Muitos hinos já são versículos musicados. Busque no YouTube versões cantadas do versículo que deseja memorizar.</div>
+    </div>
+  </div>
+
+  <div class="ai-box">
+    <div class="ai-box-title">✦ Pergunte à IA sobre memorização</div>
+    <div class="chat-row">
+      <input id="chat-inp" type="text" placeholder="Ex: Como memorizar um versículo longo?">
+      <button id="chat-btn" onclick="askIA()">Perguntar</button>
+    </div>
+    <div id="chat-resp"></div>
+  </div>
+</div>
+
+<!-- COMO USAR -->
+<div id="guia" class="screen active">
+  <div class="guide-hero">
+    <div style="color:var(--gold);font-size:1.4rem;margin-bottom:6px">✦</div>
+    <div style="color:var(--gold2);font-size:1rem;letter-spacing:1px">Guia de uso</div>
+    <p>Toque em cada aba abaixo para aprender a usar todas as funcionalidades do app.</p>
+  </div>
+
+  <div class="guide-tab" onclick="togGuia(this)">
+    <div class="guide-tab-hdr">
+      <div class="guide-tab-num">1</div>
+      <div class="guide-tab-title">📖 Aba Estudar — pratique seus versículos</div>
+      <span class="guide-tab-arr">▼</span>
+    </div>
+    <div class="guide-tab-body">
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Esta é a aba principal. Aqui você pratica os versículos que já adicionou.</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p><strong>Flashcard:</strong> veja a referência (ex: João 3:16), tente lembrar o texto, toque para revelar e avalie sua memória.</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p><strong>Lacunas:</strong> o texto aparece com palavras escondidas. Toque em cada lacuna para revelar. Ótimo para testar memória parcial.</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p><strong>Só referência:</strong> veja apenas a referência e recite em voz alta. Depois confira se acertou.</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Após cada versículo, avalie com <strong>Lembrei</strong>, <strong>Quase</strong> ou <strong>Esqueci</strong>. O app prioriza automaticamente os que você está esquecendo.</p></div>
+      <div class="guide-tip">Dica: mude de modo conforme evolui. Comece pelo Flashcard, avance para Lacunas e depois Só referência.</div>
+    </div>
+  </div>
+
+  <div class="guide-tab" onclick="togGuia(this)">
+    <div class="guide-tab-hdr">
+      <div class="guide-tab-num">2</div>
+      <div class="guide-tab-title">🧠 Aba Técnicas — aprenda a memorizar melhor</div>
+      <span class="guide-tab-arr">▼</span>
+    </div>
+    <div class="guide-tab-body">
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Aqui você encontra <strong>7 técnicas de memorização</strong> baseadas em neurociência e métodos bíblicos tradicionais.</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Toque em qualquer técnica para expandir e ler a explicação completa com exemplos práticos.</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p>No final da aba, há um <strong>chat com IA</strong>: digite qualquer dúvida sobre memorização e receba uma resposta personalizada.</p></div>
+      <div class="guide-tip">Sugestão: comece pela Repetição Espaçada — ela é a base de tudo neste app.</div>
+    </div>
+  </div>
+
+  <div class="guide-tab" onclick="togGuia(this)">
+    <div class="guide-tab-hdr">
+      <div class="guide-tab-num">3</div>
+      <div class="guide-tab-title">📊 Aba Progresso — acompanhe sua jornada</div>
+      <span class="guide-tab-arr">▼</span>
+    </div>
+    <div class="guide-tab-body">
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Veja no topo o total de avaliações: <strong>Lembrei</strong> (verde), <strong>Quase</strong> (amarelo) e <strong>Esqueci</strong> (vermelho).</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Abaixo, cada versículo tem uma barra de progresso e um badge de status: <strong>Novo</strong>, <strong>Aprendendo</strong> ou <strong>Memorizado</strong>.</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Um versículo é considerado <strong>Memorizado</strong> quando 70% ou mais das suas avaliações foram "Lembrei".</p></div>
+      <div class="guide-tip">Volte aqui regularmente para se motivar com o avanço. A consistência é mais importante que a intensidade.</div>
+    </div>
+  </div>
+
+  <div class="guide-tab" onclick="togGuia(this)">
+    <div class="guide-tab-hdr">
+      <div class="guide-tab-num">4</div>
+      <div class="guide-tab-title">✦ Aba Versículos — adicione com IA</div>
+      <span class="guide-tab-arr">▼</span>
+    </div>
+    <div class="guide-tab-body">
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Digite qualquer referência bíblica (ex: <strong>Romanos 8:28</strong> ou <strong>Mateus 5:3-10</strong>) e clique em <strong>Buscar</strong>.</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p>A IA conhece a Bíblia inteira e retorna o texto automaticamente na versão <strong>NVI</strong>.</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Confira o texto, edite se quiser outra versão, e clique em <strong>Adicionar à lista</strong>.</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Você também pode digitar o texto manualmente caso prefira uma versão diferente (ARA, NVT, etc.).</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Para remover um versículo, clique em <strong>remover</strong> ao lado dele na lista.</p></div>
+      <div class="guide-tip">Os 5 versículos iniciais já estão incluídos para você começar a praticar agora mesmo.</div>
+    </div>
+  </div>
+
+  <div class="guide-tab" onclick="togGuia(this)">
+    <div class="guide-tab-hdr">
+      <div class="guide-tab-num">5</div>
+      <div class="guide-tab-title">💾 Sobre o salvamento de dados</div>
+      <span class="guide-tab-arr">▼</span>
+    </div>
+    <div class="guide-tab-body">
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Todos os seus versículos e progresso são salvos automaticamente no seu dispositivo (localStorage).</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Nada é enviado para nenhum servidor — seus dados são 100% locais e privados.</p></div>
+      <div class="guide-step"><div class="guide-step-dot"></div><p>Limpar o histórico do navegador pode apagar os dados. Anote os versículos importantes separadamente se necessário.</p></div>
+      <div class="guide-tip">Para usar em múltiplos dispositivos, acesse pelo mesmo navegador ou copie os versículos manualmente.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESSO -->
+<div id="progress" class="screen">
+  <div class="sec-title">Sua jornada</div>
+  <div class="stats-grid" id="stats-grid"></div>
+  <div class="sec-title">Versículos</div>
+  <div id="prog-list"></div>
+</div>
+
+<!-- VERSÍCULOS -->
+<div id="add" class="screen">
+  <div class="sec-title">Buscar com IA</div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="form-group">
+      <label>Referência bíblica</label>
+      <div class="ai-row">
+        <input id="inp-ref" type="text" placeholder="Ex: João 3:16 ou Salmos 91:1-4">
+        <button class="btn-gold" id="fetch-btn" onclick="fetchVerse()" style="padding:11px 16px;white-space:nowrap">✦ Buscar</button>
+      </div>
+    </div>
+    <div class="status-msg" id="ai-status"></div>
+    <div class="form-group" style="margin-top:4px">
+      <label>Texto do versículo</label>
+      <textarea id="inp-text" placeholder="Preenchido pela IA, ou escreva manualmente…"></textarea>
+    </div>
+    <button class="btn-gold" onclick="addVerse()">+ Adicionar à lista</button>
+  </div>
+
+  <div class="sec-title">Meus versículos</div>
+  <div id="verse-list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEF=[
+  {id:1,ref:"João 3:16",text:"Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna."},
+  {id:2,ref:"Salmos 23:1",text:"O Senhor é o meu pastor e nada me faltará."},
+  {id:3,ref:"Filipenses 4:13",text:"Tudo posso naquele que me fortalece."},
+  {id:4,ref:"Jeremias 29:11",text:"Porque eu sei os planos que tenho para vocês, diz o Senhor, planos de fazê-los prosperar e não de causar dano, planos de dar a vocês esperança e um futuro."},
+  {id:5,ref:"Provérbios 3:5-6",text:"Confie no Senhor de todo o seu coração e não se apoie em seu próprio entendimento; reconheça o Senhor em todos os seus caminhos, e ele endireitará as suas veredas."},
+];
+function ld(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+
+let verses=ld('mv_v',DEF), scores=ld('mv_s',{}), mode='flip', queue=[], qIdx=0, flipped=false;
+
+const TABS=['guia','study','tecnicas','progress','add'];
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav button').forEach((b,i)=>b.classList.toggle('active',TABS[i]===id));
+  if(id==='progress')renderProg();
+  if(id==='add')renderList();
+}
+
+function togTec(c){c.classList.toggle('open');}
+function togGuia(c){c.classList.toggle('open');}
+
+async function askIA(){
+  const q=document.getElementById('chat-inp').value.trim();
+  if(!q)return;
+  const r=document.getElementById('chat-resp'),b=document.getElementById('chat-btn');
+  r.textContent='Pensando…';r.className='loading';b.disabled=true;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
+        system:'Você é um especialista em memorização bíblica. Responda em português brasileiro, de forma prática e encorajadora. Máximo 5 parágrafos curtos. Use exemplos com versículos quando possível.',
+        messages:[{role:'user',content:q}]})});
+    const d=await res.json();
+    r.textContent=d.content?.[0]?.text||'Sem resposta. Tente novamente.';r.className='';
+  }catch{r.textContent='Erro de conexão. Tente novamente.';r.className='';}
+  b.disabled=false;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement.id==='chat-inp')askIA();});
+
+async function fetchVerse(){
+  const ref=document.getElementById('inp-ref').value.trim();
+  if(!ref){toast('Digite a referência primeiro');return;}
+  const st=document.getElementById('ai-status'),btn=document.getElementById('fetch-btn');
+  st.textContent='✦ Buscando…';st.style.color='var(--muted2)';btn.disabled=true;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,
+        system:'Você é um auxiliar bíblico. Responda APENAS com o texto exato do versículo em português, versão NVI. Sem introdução, sem aspas, sem nome da versão — apenas o texto puro.',
+        messages:[{role:'user',content:ref}]})});
+    const d=await res.json();
+    const t=d.content?.[0]?.text?.trim();
+    if(t){document.getElementById('inp-text').value=t;st.textContent='✓ Encontrado — confira e adicione';st.style.color='var(--green)';}
+    else throw 0;
+  }catch{st.textContent='Não encontrado. Digite manualmente.';st.style.color='var(--red)';}
+  btn.disabled=false;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement.id==='inp-ref')fetchVerse();});
+
+function bldQ(){
+  return [...verses].sort((a,b)=>{
+    const sa=scores[a.id]||{},sb=scores[b.id]||{};
+    return ((sb.forgot||0)*3+(sb.almost||0)-(sb.knew||0)*2)-((sa.forgot||0)*3+(sa.almost||0)-(sa.knew||0)*2);
+  });
+}
+function setMode(m){
+  mode=m;queue=bldQ();qIdx=0;flipped=false;
+  document.querySelectorAll('.mode-bar button').forEach((b,i)=>b.classList.toggle('active',['flip','gaps','ref'][i]===m));
+  renderStudy();
+}
+function renderStudy(){
+  const el=document.getElementById('study-content');
+  if(!verses.length){el.innerHTML='<div class="empty">Nenhum versículo ainda.<br>Adicione na aba <strong style="color:var(--gold)">Versículos</strong>.</div>';return;}
+  queue=queue.length?queue:bldQ();
+  const v=queue[qIdx%queue.length];
+  if(mode==='flip')rFlip(el,v);
+  else if(mode==='gaps')rGaps(el,v);
+  else rRef(el,v);
+}
+function rFlip(el,v){
+  el.innerHTML=`
+  <p class="card-counter">VERSÍCULO ${(qIdx%queue.length)+1} DE ${queue.length}</p>
+  <div class="card-area"><div class="card-inner ${flipped?'flipped':''}" onclick="flip()">
+    <div class="card-front">
+      <div class="card-chip">Referência</div>
+      <div class="card-ref-big">${v.ref}</div>
+      <div class="card-hint">Toque para revelar o versículo</div>
+    </div>
+    <div class="card-back">
+      <div class="card-chip">Versículo</div>
+      <div class="card-text">${v.text}</div>
+      <div class="card-ref">${v.ref}</div>
+    </div>
+  </div></div>
+  ${flipped?`<div class="btn-row">
+    <button class="btn-f" onclick="score('forgot')">✕ Esqueci</button>
+    <button class="btn-a" onclick="score('almost')">~ Quase</button>
+    <button class="btn-k" onclick="score('knew')">✓ Lembrei</button>
+  </div>`:''}`;
+}
+function rGaps(el,v){
+  const w=v.text.split(' ');
+  const html=w.map((x,i)=>i%4===3?`<span class="gap" onclick="this.classList.add('revealed')">${x}</span>`:x).join(' ');
+  el.innerHTML=`
+  <p class="card-counter">VERSÍCULO ${(qIdx%queue.length)+1} DE ${queue.length}</p>
+  <div class="card-area"><div class="card-back" style="position:relative;transform:none;min-height:230px">
+    <div class="card-chip">Toque nas lacunas para revelar</div>
+    <div class="gap-text">${html}</div>
+    <div class="card-ref">${v.ref}</div>
+  </div></div>
+  <div class="btn-row">
+    <button class="btn-f" onclick="score('forgot')">✕ Difícil</button>
+    <button class="btn-a" onclick="score('almost')">~ Ok</button>
+    <button class="btn-k" onclick="score('knew')">✓ Fácil</button>
+  </div>`;
+}
+function rRef(el,v){
+  el.innerHTML=`
+  <p class="card-counter">VERSÍCULO ${(qIdx%queue.length)+1} DE ${queue.length}</p>
+  <div class="card-area"><div class="card-back" style="position:relative;transform:none;min-height:230px">
+    <div class="card-chip">Recite em voz alta</div>
+    <div class="card-ref-big">${v.ref}</div>
+    ${flipped?`<div class="card-text" style="margin-top:16px">${v.text}</div>`:
+    `<div class="card-hint" style="margin-top:16px">Depois toque para conferir</div>`}
+  </div></div>
+  ${!flipped?`<div class="btn-row"><button class="btn-a" onclick="flip()">Conferir</button></div>`:
+  `<div class="btn-row">
+    <button class="btn-f" onclick="score('forgot')">✕ Esqueci</button>
+    <button class="btn-a" onclick="score('almost')">~ Quase</button>
+    <button class="btn-k" onclick="score('knew')">✓ Lembrei</button>
+  </div>`}`;
+}
+function flip(){flipped=!flipped;renderStudy();}
+function score(t){
+  const v=queue[qIdx%queue.length];
+  if(!scores[v.id])scores[v.id]={forgot:0,almost:0,knew:0};
+  scores[v.id][t]++;sv('mv_s',scores);
+  qIdx++;flipped=false;renderStudy();
+  toast(t==='knew'?'✓ Muito bem!':t==='almost'?'~ Continue praticando':'✕ Vamos revisar de novo');
+}
+
+function renderProg(){
+  let k=0,a=0,f=0;
+  verses.forEach(v=>{const s=scores[v.id]||{};k+=s.knew||0;a+=s.almost||0;f+=s.forgot||0;});
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat-box"><div class="stat-num" style="color:var(--green)">${k}</div><div class="stat-lbl">Lembrei</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--yellow)">${a}</div><div class="stat-lbl">Quase</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--red)">${f}</div><div class="stat-lbl">Esqueci</div></div>`;
+  const el=document.getElementById('prog-list');
+  if(!verses.length){el.innerHTML='<div class="empty">Sem versículos ainda.</div>';return;}
+  el.innerHTML=verses.map(v=>{
+    const s=scores[v.id]||{},tot=(s.knew||0)+(s.almost||0)+(s.forgot||0);
+    const pct=tot?Math.round(((s.knew||0)/tot)*100):0;
+    const [bc,bt]=tot===0?['b-new','Novo']:pct>=70?['b-done','Memorizado']:['b-learn','Aprendendo'];
+    return `<div class="prog-item">
+      <div class="pi-ref">${v.ref}<span class="badge ${bc}">${bt}</span></div>
+      <div class="pi-text">${v.text.substring(0,82)}…</div>
+      <div class="pi-bar"><div class="pi-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function addVerse(){
+  const ref=document.getElementById('inp-ref').value.trim();
+  const text=document.getElementById('inp-text').value.trim();
+  if(!ref||!text){toast('Preencha a referência e o texto');return;}
+  verses.push({id:Date.now(),ref,text});sv('mv_v',verses);
+  document.getElementById('inp-ref').value='';
+  document.getElementById('inp-text').value='';
+  document.getElementById('ai-status').textContent='';
+  queue=bldQ();qIdx=0;renderList();toast('Versículo adicionado!');
+}
+function delVerse(id){
+  verses=verses.filter(v=>v.id!==id);sv('mv_v',verses);
+  delete scores[id];sv('mv_s',scores);
+  queue=bldQ();qIdx=0;renderList();toast('Removido');
+}
+function renderList(){
+  const el=document.getElementById('verse-list');
+  if(!verses.length){el.innerHTML='<div class="empty">Nenhum versículo ainda.</div>';return;}
+  el.innerHTML=verses.map(v=>`
+    <div class="verse-item">
+      <div><div class="vi-ref">${v.ref}</div><div class="vi-prev">${v.text.substring(0,58)}…</div></div>
+      <button class="btn-del" onclick="delVerse(${v.id})">remover</button>
+    </div>`).join('');
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2300);
+}
+
+queue=bldQ();renderStudy();
+</script>
+</body>
+</html>
